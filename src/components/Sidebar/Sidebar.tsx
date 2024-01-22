@@ -38,10 +38,11 @@ export function Sidebar() {
       </div>
       <nav className="hs-accordion-group p-6 w-full flex flex-col flex-wrap" data-hs-accordion-always-open>
         <ul className="space-y-1.5">
-          {SUPER_ADMIN_SIDEBAR_ITEMS.map((item) => {
+          {SUPER_ADMIN_SIDEBAR_ITEMS.map((item, index) => {
             if (item?.children && Boolean(item?.children.length)) {
               return (
                 <SidebarAccordionItem
+                  key={index}
                   title={item.title}
                   iconComponent={item.iconComponent}
                   children={item.children}
@@ -50,7 +51,14 @@ export function Sidebar() {
               );
             }
 
-            return <SidebarItem title={item.title} iconComponent={item.iconComponent} isActive={item?.isActive} />;
+            return (
+              <SidebarItem
+                key={index}
+                title={item.title}
+                iconComponent={item.iconComponent}
+                isActive={item?.isActive}
+              />
+            );
           })}
         </ul>
       </nav>

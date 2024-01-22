@@ -20,8 +20,8 @@ const ACTIVE_STYLE = 'hover:bg-gray-100 dark:bg-gray-900 dark:text-white';
 const SidebarAccordionItem = (props: SidebarAccordionItemProps) => {
   const { title, isActive, children, iconComponent } = props;
 
-  const renderChildrenItem = (item: SidebarAccordionChildrenItem) => (
-    <li>
+  const renderChildrenItem = (item: SidebarAccordionChildrenItem, index: number) => (
+    <li key={`${index}-accordion-item`}>
       <a
         className={`flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-slate-700 rounded-lg ${isActive ? ACTIVE_STYLE : IN_ACTIVE_STYLE}`}
         href="#"
