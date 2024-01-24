@@ -1,6 +1,5 @@
 // import { create } from 'zustand';
 import './App.css';
-import { Sidebar } from './components/Sidebar/Sidebar';
 
 // interface BearState {
 //   bears: number;
@@ -18,7 +17,7 @@ function App() {
 
   return (
     <div>
-      <Sidebar />
+      <h1> Hello world</h1>
     </div>
   );
 }
