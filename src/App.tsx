@@ -1,25 +1,41 @@
-// import { create } from 'zustand';
-import './App.css';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { loginAction, loginLoader } from './modules/login/routeUtil/routeUtils';
+import LoginScreen from './modules/login/view/LoginScreen';
+import GeneralErrorScreen from './modules/shared/GeneralError';
+import AdminRoute from './route/AdminRoute';
+import { DeciderRoute } from './route/DeciderRoute';
+import UserRoute from './route/UserRoute';
 
-// interface BearState {
-//   bears: number;
-//   increase: (by: number) => void;
-// }
+const router = createBrowserRouter([
+  {
+    path: '/',
+    loader: loginLoader,
+    element: <DeciderRoute />,
+    errorElement: <GeneralErrorScreen />,
+  },
+  {
+    path: '/login',
+    action: loginAction,
+    loader: loginLoader,
+    element: <LoginScreen />,
+    errorElement: <GeneralErrorScreen />,
+  },
 
-// const useBearStore = create<BearState>()((set) => ({
-//   bears: 0,
-//   increase: (by) => set((state) => ({ bears: state.bears + by })),
-// }));
+  // TODO: both dashboard and admin dashboard need to add a loader to check for token so you wont be able to go between screens interchangeably
+  {
+    path: '/dashboard',
+    element: <UserRoute />,
+    errorElement: <GeneralErrorScreen />,
+  },
+  {
+    path: '/admin-dashboard',
+    element: <AdminRoute />,
+    errorElement: <GeneralErrorScreen />,
+  },
+]);
 
 function App() {
-  // const bears = useBearStore((state) => state.bears);
-  // const increase = useBearStore((state) => state.increase);
-
-  return (
-    <div>
-      <h1> Hello world</h1>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
