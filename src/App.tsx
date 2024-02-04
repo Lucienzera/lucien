@@ -4,6 +4,7 @@ import LoginScreen from './modules/login/view/LoginScreen';
 import GeneralErrorScreen from './modules/shared/GeneralError';
 import AdminRoute from './route/AdminRoute';
 import { DeciderRoute } from './route/DeciderRoute';
+import HomeRoute from './route/HomeRoute';
 import UserRoute from './route/UserRoute';
 
 const router = createBrowserRouter([
@@ -19,16 +20,19 @@ const router = createBrowserRouter([
     element: <LoginScreen />,
     errorElement: <GeneralErrorScreen />,
   },
-
-  // TODO: both dashboard and admin dashboard need to add a loader to check for token so you wont be able to go between screens interchangeably
   {
-    path: '/dashboard',
-    element: <UserRoute />,
-    errorElement: <GeneralErrorScreen />,
-  },
-  {
-    path: '/admin-dashboard',
-    element: <AdminRoute />,
+    path: '/home',
+    element: <HomeRoute />,
+    children: [
+      {
+        path: 'dashboard',
+        element: <UserRoute />,
+      },
+      {
+        path: 'admin-dashboard',
+        element: <AdminRoute />,
+      },
+    ],
     errorElement: <GeneralErrorScreen />,
   },
 ]);
