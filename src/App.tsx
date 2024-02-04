@@ -9,7 +9,6 @@ import UserRoute from './route/UserRoute';
 const router = createBrowserRouter([
   {
     path: '/',
-    loader: loginLoader,
     element: <DeciderRoute />,
     errorElement: <GeneralErrorScreen />,
   },

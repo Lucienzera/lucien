@@ -50,7 +50,7 @@ async function loginLoader() {
   } else if (token && institutionId) {
     return redirect('/dashboard');
   }
-  return redirect('/login');
+  return null;
 }
 
 export { loginAction, loginLoader };
