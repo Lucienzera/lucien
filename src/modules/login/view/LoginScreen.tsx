@@ -1,6 +1,15 @@
 import { Form } from 'react-router-dom';
 
 export default function LoginScreen() {
+  const buttonStyle = {
+    padding: '10px 20px',
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '16px',
+  };
   return (
     <>
       <h1>Im in login screen</h1>
@@ -23,6 +32,14 @@ export default function LoginScreen() {
             />
             <button type="submit">Login</button>
           </Form>
+
+          <a
+            href="https://siddiq-payment-gzolqgctea-et.a.run.app/institution/MX3EZUlP7OXQoU3Yn3eU"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <button style={buttonStyle}>Go to Institution</button>
+          </a>
         </div>
       </div>
     </>
