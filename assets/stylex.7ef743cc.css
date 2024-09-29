@@ -1,0 +1,37 @@
+
+@layer priority1, priority2, priority3, priority4;
+@layer priority1{
+.x1ghz6dp{margin:0}
+}
+@layer priority2{
+.x98rzlu{flex:1}
+.x1hl2dhg{text-decoration:none}
+}
+@layer priority3{
+.x1t391ir{background-color:blue}
+.xyrfnid{background-color:grey}
+.xrkmrrc{background-color:red}
+.x1lliihq{display:block}
+.x78zum5{display:flex}
+.xdt5ytf{flex-direction:column}
+.x1q0g3np{flex-direction:row}
+.xixxii4{position:fixed}
+.x1vjfegm{z-index:1}
+.xo3jl0l:visited{color:green}
+.xbrh7vm:hover{background-color:blue}
+.x1ueb1lb:active{background-color:darkblue}
+}
+@layer priority4{
+.x1ey2m1c{bottom:0}
+.xng8ra{height:60px}
+.xu96u03{left:0}
+.xyorhqc{margin-bottom:10px}
+.xg6iff7{min-height:100vh}
+.x1g81zrj{min-width:100vw}
+.x1psi4wd{padding-left:220px}
+.x1ow4hk9{padding-top:60px}
+.x13vifvy{top:0}
+.x1w1tb2m{top:60px}
+.xn9wirt{width:100vw}
+.x16grhtn{width:220px}
+}
