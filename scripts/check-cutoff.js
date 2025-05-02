@@ -14,8 +14,12 @@ const calculateNextCutoffDates = () => {
     console.log('today.getMonth()', today.getMonth())
     console.log('today.getDate()', today.getDate())
 
+    console.log('nextCutoff.getFullYear()', nextCutoff.getFullYear())
+    console.log('nextCutoff.getMonth()', nextCutoff.getMonth())
+    console.log('nextCutoff.getDate()', nextCutoff.getDate())
 
-    console.log('followingCutoff', followingCutoff)
+
+    console.log('nextCutoff', nextCutoff)
     console.log('followingCutoff', followingCutoff)
 
   
