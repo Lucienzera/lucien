@@ -30,6 +30,7 @@ jobs:
               run: |
                   # Get the latest version tag from git (format v*.*.*)
                   LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+                  echo LATEST_TAG
 
                   # If no tags exist yet, start with v1.0.0
                   if [ -z "$LATEST_TAG" ]; then

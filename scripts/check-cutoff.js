@@ -9,6 +9,15 @@ const calculateNextCutoffDates = () => {
   
     const followingCutoff = new Date(nextCutoff);
     followingCutoff.setDate(followingCutoff.getDate() + 14);
+
+    console.log('today.getFullYear()', today.getFullYear())
+    console.log('today.getMonth()', today.getMonth())
+    console.log('today.getDate()', today.getDate())
+
+
+    console.log('followingCutoff', followingCutoff)
+    console.log('followingCutoff', followingCutoff)
+
   
     return {
       isTodayCutoff:
@@ -21,10 +30,13 @@ const calculateNextCutoffDates = () => {
   };
   
   const { isTodayCutoff, nextCutoff } = calculateNextCutoffDates();
+
+
+
   
   if (!isTodayCutoff) {
     console.log(`🛑 Skipping build. Today is not a cutoff date. Next is: ${nextCutoff}`);
-    process.exit(0); // Exit successfully, but stop further jobs
+    process.exit(1); // Exit successfully, but stop further jobs
   } else {
     console.log(`✅ Today is a cutoff date. Proceeding with build.`);
   }
