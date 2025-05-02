@@ -1,0 +1,94 @@
+name: Bi-weekly cutoff build
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '30 9 * * 5' # 9:30 AM UTC (5:30 PM MYT) every Friday
+
+jobs:
+    build-if-cutoff:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            - name: Use Node.js
+              uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+              with:
+                  node-version: 'lts/*'
+                  registry-url: 'https://registry.npmjs.org'
+                  cache: 'npm'
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Check if today is a cutoff date
+              run: node scripts/check-cutoff.js
+
+            - name: Set EAS build profile
+              run: echo "EAS_BUILD_PROFILE=production" >> $GITHUB_ENV
+
+            - name: Generate release tag
+              id: tag
+              run: |
+                  # Get the latest version tag from git (format v*.*.*)
+                  LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+
+                  # If no tags exist yet, start with v1.0.0
+                  if [ -z "$LATEST_TAG" ]; then
+                    TAG_NAME="v1.0.0"
+                  else
+                    # Extract major version number (remove 'v' prefix)
+                    MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | sed 's/v//')
+
+                    # Extract minor version number
+                    MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+
+                    # Increment minor version for this cutoff release
+                    NEW_MINOR=$((MINOR + 1))
+                    
+                    # Create new tag with incremented minor version and reset patch version
+                    TAG_NAME="v${MAJOR}.${NEW_MINOR}.0"
+                  fi
+
+                  # Set output variable for use in later steps
+                  echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+                  # Log the tag being created
+                  echo "Creating tag: ${TAG_NAME}"
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ steps.tag.outputs.tag_name }}
+                  name: 'Cutoff Build ${{ steps.tag.outputs.tag_name }}'
+                  body: |
+                      Automated cutoff build for ${{ env.EAS_BUILD_PROFILE }} environment.
+                      Build profile: ${{ env.EAS_BUILD_PROFILE }}
+                      Created by GitHub Actions workflow: ${{ github.workflow }}
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Send Teams Webhook Message on Success
+              if: success()
+              uses: neonidian/teams-notify-build-status@v4.1.0
+              with:
+                  webhookUrl: >-
+                      ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
+                  title: ${{ github.workflow }} Success
+                  titleBackgroundColor: 'success'
+                  message: '${{ github.workflow }} - Github release build triggered successfully.'
+              env:
+                  SHOULD_DISPLAY_VIEW_RUN_BUTTON: true
+
+            - name: Send Teams Webhook Message on Failure
+              if: failure()
+              uses: neonidian/teams-notify-build-status@v4.1.0
+              with:
+                  webhookUrl: >-
+                      ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
+                  title: ${{ github.workflow }} Failed
+                  titleBackgroundColor: 'failure'
+                  message: '${{ github.workflow }} Failed: Please check the logs for more details.'
+              env:
+                  SHOULD_DISPLAY_VIEW_RUN_BUTTON: true
