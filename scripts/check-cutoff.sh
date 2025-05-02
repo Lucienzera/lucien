@@ -1,5 +1,5 @@
 #!/bin/bash
-START_DATE="2025-04-17"
+START_DATE="2025-04-18"
 TODAY=$(date +%Y-%m-%d)
 
 # Convert dates to seconds since epoch
