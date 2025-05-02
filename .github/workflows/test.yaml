@@ -57,35 +57,31 @@ jobs:
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: ${{ steps.tag.outputs.tag_name }}
-                  name: 'Cutoff Build ${{ steps.tag.outputs.tag_name }}'
+                  name: '${{ steps.tag.outputs.tag_name }}'
                   body: |
-                      Automated cutoff build for ${{ env.EAS_BUILD_PROFILE }} environment.
+                      Automated cutoff build
                       Build profile: ${{ env.EAS_BUILD_PROFILE }}
                       Created by GitHub Actions workflow: ${{ github.workflow }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Send Teams Webhook Message on Success
-              if: success()
-              uses: neonidian/teams-notify-build-status@v4.1.0
-              with:
-                  webhookUrl: >-
-                      ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
-                  title: ${{ github.workflow }} Success
-                  titleBackgroundColor: 'success'
-                  message: '${{ github.workflow }} - Github release build triggered successfully.'
-              env:
-                  SHOULD_DISPLAY_VIEW_RUN_BUTTON: true
+            # - name: Send Teams Webhook Message on Success
+            #   if: success()
+            #   uses: neonidian/teams-notify-build-status@v4.1.0
+            #   with:
+            #       webhookUrl: >-
+            #           ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
+            #       title: ${{ github.workflow }} Success
+            #       titleBackgroundColor: 'success'
+            #       message: '${{ github.workflow }} - Github release build triggered successfully.'
 
-            - name: Send Teams Webhook Message on Failure
-              if: failure()
-              uses: neonidian/teams-notify-build-status@v4.1.0
-              with:
-                  webhookUrl: >-
-                      ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
-                  title: ${{ github.workflow }} Failed
-                  titleBackgroundColor: 'failure'
-                  message: '${{ github.workflow }} Failed: Please check the logs for more details.'
-              env:
-                  SHOULD_DISPLAY_VIEW_RUN_BUTTON: true
+            # - name: Send Teams Webhook Message on Failure
+            #   if: failure()
+            #   uses: neonidian/teams-notify-build-status@v4.1.0
+            #   with:
+            #       webhookUrl: >-
+            #           ${{ env.EAS_BUILD_PROFILE == 'production' && vars.PROD_TEAMS_WEBHOOK_URL }}
+            #       title: ${{ github.workflow }} Failed
+            #       titleBackgroundColor: 'failure'
+            #       message: '${{ github.workflow }} Failed: Please check the logs for more details.'
