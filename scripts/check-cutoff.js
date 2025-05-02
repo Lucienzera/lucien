@@ -1,5 +1,5 @@
 const calculateNextCutoffDates = () => {
-    const startDate = new Date('2025-04-18');
+    const startDate = new Date('2025-04-17');
     const today = new Date();
   
     today.setHours(0, 0, 0, 0);
