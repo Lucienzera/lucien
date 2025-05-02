@@ -2,8 +2,16 @@ const calculateNextCutoffDates = () => {
     const startDate = new Date('2025-04-18');
     const today = new Date();
   
+    today.setHours(0, 0, 0, 0);
+
     let nextCutoff = new Date(startDate);
+    nextCutoff.setHours(0, 0, 0, 0);
+
+
     while (nextCutoff < today) {
+      console.log('today', today)
+
+      console.log('nextCutoff in while', nextCutoff)
       nextCutoff.setDate(nextCutoff.getDate() + 14);
     }
   
