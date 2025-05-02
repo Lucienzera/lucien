@@ -7,7 +7,7 @@ const calculateNextCutoffDates = () => {
     let nextCutoff = new Date(startDate);
     nextCutoff.setHours(0, 0, 0, 0);
 
-
+  console.log(nextCutoff < today)
     while (nextCutoff < today) {
       console.log('today', today)
 

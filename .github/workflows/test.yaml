@@ -28,9 +28,12 @@ jobs:
             - name: Generate release tag
               id: tag
               run: |
+                  # Fetch all tags from remote
+                  git fetch --tags
+
                   # Get the latest version tag from git (format v*.*.*)
                   LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
-                  echo LATEST_TAG
+                  echo "LATEST_TAG=$LATEST_TAG"
 
                   # If no tags exist yet, start with v1.0.0
                   if [ -z "$LATEST_TAG" ]; then
