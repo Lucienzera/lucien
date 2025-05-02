@@ -22,10 +22,9 @@ jobs:
             - name: Check if today is a cutoff date
               run: node scripts/check-cutoff.js
 
-            - name: Set EAS build profile
-              run: echo "EAS_BUILD_PROFILE=production" >> $GITHUB_ENV
 
             - name: Generate release tag
+              if: success()
               id: tag
               run: |
                   # Fetch all tags from remote
@@ -58,6 +57,7 @@ jobs:
                   echo "Creating tag: ${TAG_NAME}"
 
             - name: Create GitHub Release
+              if: success()
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: ${{ steps.tag.outputs.tag_name }}
@@ -65,10 +65,15 @@ jobs:
                   body: |
                       Automated cutoff build
                       Build profile: ${{ env.EAS_BUILD_PROFILE }}
-                      Created by GitHub Actions workflow: ${{ github.workflow }}
+                      GitHub Actions workflow: ${{ github.workflow }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Notify build trigger fail
+              if: failure()
+              run: echo "Build trigger failed. Please check the logs for more details."
+            
 
             # - name: Send Teams Webhook Message on Success
             #   if: success()
