@@ -41,15 +41,12 @@ const calculateNextCutoffDates = () => {
     };
   };
   
-  const { isTodayCutoff, nextCutoff } = calculateNextCutoffDates();
+const { isTodayCutoff, nextCutoff } = calculateNextCutoffDates();
 
-
-
-  
-  if (!isTodayCutoff) {
-    console.log(`🛑 Skipping build. Today is not a cutoff date. Next is: ${nextCutoff}`);
-    process.exit(1); // Exit successfully, but stop further jobs
-  } else {
-    console.log(`✅ Today is a cutoff date. Proceeding with build.`);
-  }
-  
+if (!isTodayCutoff) {
+  console.log(`🛑 Skipping build. Today is not a cutoff date. Next is: ${nextCutoff}`);
+  console.log('cutoff=false');
+} else {
+  console.log(`✅ Today is a cutoff date. Proceeding with build.`);
+  console.log('cutoff=true');
+}

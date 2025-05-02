@@ -13,18 +13,13 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: 'lts/*'
-                cache: 'npm'
-
             - name: Check if today is a cutoff date
-              run: node scripts/check-cutoff.js
-
+              id: cutoff
+              run: scripts/check-cutoff.sh
+              shell: bash
 
             - name: Generate release tag
-              if: success()
+              if: steps.cutoff.outputs.should_cutoff == 'true'
               id: tag
               run: |
                   # Fetch all tags from remote
@@ -57,7 +52,7 @@ jobs:
                   echo "Creating tag: ${TAG_NAME}"
 
             - name: Create GitHub Release
-              if: success()
+              if: steps.cutoff.outputs.should_cutoff == 'true'
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: ${{ steps.tag.outputs.tag_name }}
@@ -74,6 +69,9 @@ jobs:
               if: failure()
               run: echo "Build trigger failed. Please check the logs for more details."
             
+            - name: Notify build trigger skipped
+              if: steps.cutoff.outputs.should_cutoff == 'false'
+              run: echo "Build skipped. Today is not a cutoff date."
 
             # - name: Send Teams Webhook Message on Success
             #   if: success()
