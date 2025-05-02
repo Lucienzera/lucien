@@ -15,8 +15,9 @@ jobs:
 
             - name: Check if today is a cutoff date
               id: cutoff
-              run: scripts/check-cutoff.sh
-              shell: bash
+              run: |
+                chmod +x ./scripts/check-cutoff.sh
+                ./scripts/check-cutoff.sh
 
             - name: Generate release tag
               if: steps.cutoff.outputs.should_cutoff == 'true'
