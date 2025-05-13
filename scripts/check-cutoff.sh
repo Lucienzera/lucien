@@ -8,8 +8,9 @@
 START_DATE_FRIDAY="2025-05-16"  
 
 # Get today's date in YYYY-MM-DD format
-TODAY_DATE=$(date +%Y-%m-%d)
+# TODAY_DATE=$(date +%Y-%m-%d)
 
+TODAY_DATE="2025-05-16"
 # Convert start date and today's date to seconds calculation
 start_date_in_seconds=$(date -d "$START_DATE_FRIDAY" +%s)
 today_date_in_seconds=$(date -d "$TODAY_DATE" +%s)
