@@ -2,7 +2,7 @@ name: Bi-weekly cutoff build
 on:
     workflow_dispatch:
     schedule:
-        - cron: '30 9 * * 5' # 9:30 AM UTC (5:30 PM MYT) every Friday
+        - cron: '50 8 * * *' # 8:50 AM UTC (4:50 PM MYT) every day
 
 jobs:
     build-if-cutoff:
