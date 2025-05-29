@@ -1,9 +1,27 @@
 # This build will run every Friday at 9:30 AM UTC (5:30 PM MYT),
 # will create a new release tag if the current date is a cutoff date.
 name: Bi-weekly cutoff build
+
 on:
     workflow_dispatch:
-
+        inputs:
+            release_type:
+                description: 'Type of release'
+                required: false
+                default: 'minor'
+                type: choice
+                options:
+                    - major
+                    - minor
+                    - patch
+            trigger_source:
+                description: 'Trigger automatically or adhoc'
+                required: false
+                default: 'cutoff'
+                type: choice
+                options:
+                    - adhoc
+                    - cutoff
 jobs:
     check-cutoff:
         runs-on: ubuntu-latest
