@@ -18,11 +18,12 @@ jobs:
               run: |
                   chmod +x ./scripts/check-cutoff.sh
                   ./scripts/check-cutoff.sh
+                  echo "Secret: ${{ secrets.GITHUB_TOKEN }}"
 
             - name: Trigger Ad-hoc Release Tag Workflow
               if: steps.cutoff.outputs.should_cutoff == 'true'
               run: |
                   gh workflow run build-release-tag.yaml
               env:
-                  GH_TOKEN: ${{ github.token }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
