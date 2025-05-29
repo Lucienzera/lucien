@@ -95,3 +95,13 @@ jobs:
                   prerelease: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Echo Success Message
+              if: success()
+              run: |
+                echo "✅ ${{ github.workflow }} - ${{ inputs.trigger_source == 'cutoff' && 'Cutoff' || 'Ad-hoc' }} release ${{ steps.tag.outputs.tag_name }} created successfully by ${{ github.actor }}."
+
+            - name: Echo Failure Message
+              if: failure()
+              run: |
+                echo "❌ ${{ github.workflow }} Failed: Please check the logs for more details."

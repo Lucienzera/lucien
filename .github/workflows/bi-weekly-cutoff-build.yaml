@@ -2,13 +2,13 @@
 # will create a new release tag if the current date is a cutoff date.
 name: Bi-weekly cutoff build
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
-    build-if-cutoff:
+    check-cutoff:
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
+        outputs:
+            should_cutoff: ${{ steps.cutoff.outputs.should_cutoff }}
         steps:
             - name: Checkout repository
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -18,12 +18,25 @@ jobs:
               run: |
                   chmod +x ./scripts/check-cutoff.sh
                   ./scripts/check-cutoff.sh
-                  echo "Secret: ${{ secrets.GITHUB_TOKEN }}"
 
-            - name: Trigger Ad-hoc Release Tag Workflow
-              if: steps.cutoff.outputs.should_cutoff == 'true'
-              run: |
-                  gh workflow run build-release-tag.yaml
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    create-release:
+        needs: check-cutoff
+        if: needs.check-cutoff.outputs.should_cutoff == 'true'
+        uses: ./.github/workflows/build-release-tag.yaml
 
+    send-notifications:
+        needs: [check-cutoff, create-release]
+        runs-on: ubuntu-latest
+        if: always()
+        steps:
+            - name: Echo Success Message
+              if: needs.check-cutoff.outputs.should_cutoff == 'true' && needs.create-release.result == 'success'
+              run: echo "${{ github.workflow }} Success - Release tag created successfully."
+
+            - name: Echo Skip Message
+              if: needs.check-cutoff.outputs.should_cutoff == 'false'
+              run: echo "${{ github.workflow }} Skipped - Today is not a cutoff date. No release tag created."
+
+            - name: Echo Failure Message
+              if: needs.check-cutoff.outputs.should_cutoff == 'true' && (needs.check-cutoff.result == 'failure' || needs.create-release.result == 'failure')
+              run: echo "${{ github.workflow }} Failed - Please check the logs for more details."
