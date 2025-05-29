@@ -23,5 +23,3 @@ jobs:
               if: steps.cutoff.outputs.should_cutoff == 'true'
               run: |
                   gh workflow run build-release-tag.yaml
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -92,5 +92,4 @@ jobs:
                       Triggered by: ${{ github.actor }}
                       Trigger source: ${{ inputs.trigger_source }}
                   generate_release_notes: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  prerelease: false
