@@ -22,7 +22,7 @@ jobs:
     create-release:
           needs: check-cutoff
           if: needs.check-cutoff.outputs.should_cutoff == 'true'
-          uses: ./build-release-tag.yaml
+          uses: ./.github/workflows/build-release-tag.yaml
 
     send-notifications:
         needs: [check-cutoff, create-release]
