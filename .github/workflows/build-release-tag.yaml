@@ -92,4 +92,6 @@ jobs:
                       Triggered by: ${{ github.actor }}
                       Trigger source: ${{ inputs.trigger_source }}
                   generate_release_notes: true
-                  prerelease: false
+                  prerelease: true
+              env:
+                  GH_TOKEN: ${{ github.token }}
