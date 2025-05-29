@@ -22,6 +22,16 @@ on:
                 options:
                     - adhoc
                     - cutoff
+    workflow_call:  # ✅ Add this line to allow reuse from other workflows
+        inputs:
+            release_type:
+              required: false
+              type: string
+              default: 'minor'
+            trigger_source:
+              required: false
+              type: string
+              default: 'cutoff'
 
 jobs:
     generate-release:
