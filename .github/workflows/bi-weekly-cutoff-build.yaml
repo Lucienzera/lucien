@@ -4,6 +4,9 @@ name: Bi-weekly cutoff build
 on:
   workflow_dispatch:
 
+permissions:  # 👈 Add this block
+  contents: write
+
 jobs:
     check-cutoff:
         runs-on: ubuntu-latest
