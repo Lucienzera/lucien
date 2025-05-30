@@ -5,51 +5,34 @@ name: Build release tag
 on:
     workflow_dispatch:
         inputs:
-            release_type:
-                description: 'Type of release'
-                required: false
-                default: 'minor'
-                type: choice
-                options:
-                    - major
-                    - minor
-                    - patch
             trigger_source:
-                description: 'Adhoc, cutoff or stable release'
+                description: 'Release trigger source'
                 required: false
                 default: 'cutoff'
                 type: choice
                 options:
-                    - adhoc
                     - cutoff
+                    - adhoc
                     - stable
-    workflow_call:  # ✅ Add this line to allow reuse from other workflows
+                    - hotfix
+    workflow_call:
         inputs:
-            release_type:
-              required: false
-              type: string
-              default: 'minor'
             trigger_source:
               required: false
               type: string
               default: 'cutoff'
 
 jobs:
-# Right now this generate-release job only bump minor and create new RC-0
+# Cutoff: Bump minor version and create -rc-0
+# Adhoc: Use latest rc version and bump rc + 1
+# Stable: Use latest version and remove -rc-X and create prerelease: false
+# Hotfix: Use latest version, bump patch version and create -rc-0
 
-# If we want to make adhoc release then the workflow_dispatch can suggest:
-# RC: If RC then will bump rc number instead (to cater for adhoc RC)
-# Minor: If Minor then will bump minor number and reset rc number to 0
+#Workflow: Cutoff > Adhoc > Stable
+#Example: If cutoff is 1.2.0-rc-0, then adhoc will be 1.2.0-rc-1, and stable will be 1.2.0
 
-# Cutoff: Create new minor version with RC-0 tag for cutoff builds
-# Ad-hoc: Increment latest RC tag by 1 for ad-hoc builds
-# Stable: Create stable release tag based on latest RC tag for internal documentation, Create PR to bump app version
-
-#Workflow: Cutoff > Ad-hoc > Stable
-#Example: If cutoff is 1.2.0-RC-0, then ad-hoc will be 1.2.0-RC-1, and stable will be 1.2.0
-
-#Workflow (require hotfix): Ad-hoc (patch) > Ad-hoc (patch) > Stable
-#Example: If stable is 1.2.0 then adhoc will be 1.2.1-rc-1 then stable will be 1.2.1
+#Workflow (hotfix): Hotfix > Adhoc > Stable
+#Example: If stable is 1.2.0 then hotfix will be 1.2.1-rc-0, adhoc will be 1.2.1-rc-1, then stable will be 1.2.1
 
     generate-release-tag:
         runs-on: ubuntu-latest
@@ -77,48 +60,35 @@ jobs:
                   fi
 
                   if [[ "${{ inputs.trigger_source }}" == "cutoff" ]]; then
-                    # Cutoff: Create new version with RC-0 based on release_type
+                    # Cutoff: Bump minor version and create -rc-0
                     MAJOR=$(echo "$LATEST_STABLE" | cut -d. -f1 | cut -dv -f2)
                     MINOR=$(echo "$LATEST_STABLE" | cut -d. -f2)
-                    PATCH=$(echo "$LATEST_STABLE" | cut -d. -f3)
-                    
-                    if [[ "${{ inputs.release_type }}" == "major" ]]; then
-                      NEXT_MAJOR=$((MAJOR + 1))
-                      tag_name="v${NEXT_MAJOR}.0.0-rc-0"
-                    elif [[ "${{ inputs.release_type }}" == "minor" ]]; then
-                      NEXT_MINOR=$((MINOR + 1))
-                      tag_name="v${MAJOR}.${NEXT_MINOR}.0-rc-0"
-                    else  # patch
-                      NEXT_PATCH=$((PATCH + 1))
-                      tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
-                    fi
+                    NEXT_MINOR=$((MINOR + 1))
+                    tag_name="v${MAJOR}.${NEXT_MINOR}.0-rc-0"
                   elif [[ "${{ inputs.trigger_source }}" == "adhoc" ]]; then
-                    # Ad-hoc: Handle based on release_type
-                    if [[ "${{ inputs.release_type }}" == "patch" ]]; then
-                      # Patch: Create new patch version with RC-0 from latest stable
-                      MAJOR=$(echo "$LATEST_STABLE" | cut -d. -f1 | cut -dv -f2)
-                      MINOR=$(echo "$LATEST_STABLE" | cut -d. -f2)
-                      PATCH=$(echo "$LATEST_STABLE" | cut -d. -f3)
-                      NEXT_PATCH=$((PATCH + 1))
-                      tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
-                    else
-                      # Non-patch: Increment latest RC tag by 1
-                      if [[ -z "$LATEST_RC" ]]; then
-                        echo "Error: No RC tags found for adhoc release"
-                        exit 1
-                      fi
-                      RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
-                      RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
-                      NEXT_RC_NUM=$((RC_NUM + 1))
-                      tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
+                    # Adhoc: Use latest rc version and bump rc + 1
+                    if [[ -z "$LATEST_RC" ]]; then
+                      echo "Error: No RC tags found for adhoc release"
+                      exit 1
                     fi
-                  else
-                    # Stable: Create stable release from latest RC
+                    RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
+                    RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
+                    NEXT_RC_NUM=$((RC_NUM + 1))
+                    tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
+                  elif [[ "${{ inputs.trigger_source }}" == "stable" ]]; then
+                    # Stable: Use latest rc version and remove -rc-X
                     if [[ -z "$LATEST_RC" ]]; then
                       echo "Error: No RC tags found for stable release"
                       exit 1
                     fi
                     tag_name=$(echo "$LATEST_RC" | cut -d'-' -f1)
+                  elif [[ "${{ inputs.trigger_source }}" == "hotfix" ]]; then
+                    # Hotfix: Use latest stable, bump patch version and create -rc-0
+                    MAJOR=$(echo "$LATEST_STABLE" | cut -d. -f1 | cut -dv -f2)
+                    MINOR=$(echo "$LATEST_STABLE" | cut -d. -f2)
+                    PATCH=$(echo "$LATEST_STABLE" | cut -d. -f3)
+                    NEXT_PATCH=$((PATCH + 1))
+                    tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
                   fi
 
                   echo "Latest stable: $LATEST_STABLE"
@@ -140,9 +110,8 @@ jobs:
                   tag_name: ${{ needs.generate-release-tag.outputs.tag_name }}
                   name: '${{ needs.generate-release-tag.outputs.tag_name }}'
                   body: |
-                      ${{ inputs.trigger_source == 'cutoff' && 'Automated cutoff build' || 'Ad-hoc release build' }}
+                      ${{ inputs.trigger_source == 'cutoff' && 'Automated cutoff build' || inputs.trigger_source == 'hotfix' && 'Hotfix release build' || inputs.trigger_source == 'stable' && 'Stable release build' || 'Ad-hoc release build' }}
                       Build profile: Production
-                      Release type: ${{ inputs.release_type }}
                       GitHub Actions workflow: ${{ github.workflow }}
                       Triggered by: ${{ github.actor }}
                       Trigger source: ${{ inputs.trigger_source }}
@@ -154,7 +123,7 @@ jobs:
             - name: Echo Success Message
               if: success()
               run: |
-                echo "✅ ${{ github.workflow }} - ${{ inputs.trigger_source == 'cutoff' && 'Cutoff' || 'Ad-hoc' }} release ${{ needs.generate-release-tag.outputs.tag_name }} created successfully by ${{ github.actor }}."
+                echo "✅ ${{ github.workflow }} - ${{ inputs.trigger_source }} release ${{ needs.generate-release-tag.outputs.tag_name }} created successfully by ${{ github.actor }}."
 
             - name: Echo Failure Message
               if: failure()
