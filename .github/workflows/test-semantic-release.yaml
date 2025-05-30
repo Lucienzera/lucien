@@ -1,36 +1,49 @@
 name: Release
+
 on:
-  push:
-    branches:
-      - main # or main
+  schedule:
+    - cron: '0 17 * * 5'  # Every Friday at 5PM UTC
+  workflow_dispatch:
+    inputs:
+      stable:
+        description: 'Is this a stable release?'
+        required: false
+        default: 'false'  # default to RC if not specified
 
 permissions:
-  contents: read # for checkout
+  contents: read  # For checkout
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for npm provenance
+      contents: write         # For creating GitHub releases
+      issues: write           # For commenting on issues
+      pull-requests: write    # For commenting on PRs
+      id-token: write         # For NPM provenance (if used)
+
+    env:
+      STABLE_RELEASE: ${{ github.event.inputs.stable || 'false' }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
+          node-version: 'lts/*'
+
       - name: Install dependencies
         run: npm clean-install
-      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+
+      - name: Audit installed packages
         run: npm audit signatures
+
       - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
