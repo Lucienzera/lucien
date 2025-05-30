@@ -24,7 +24,7 @@ jobs:
 
     create-release:
           needs: check-cutoff
-          if: needs.check-cutoff.outputs.should_cutoff == 'true'
+          if: needs.check-cutoff.outputs.should_cutoff == 'false'
           uses: ./.github/workflows/build-release-tag.yaml
 
 
