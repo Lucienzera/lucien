@@ -93,15 +93,25 @@ jobs:
                       tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
                     fi
                   elif [[ "${{ inputs.trigger_source }}" == "adhoc" ]]; then
-                    # Ad-hoc: Increment latest RC tag by 1
-                    if [[ -z "$LATEST_RC" ]]; then
-                      echo "Error: No RC tags found for adhoc release"
-                      exit 1
+                    # Ad-hoc: Handle based on release_type
+                    if [[ "${{ inputs.release_type }}" == "patch" ]]; then
+                      # Patch: Create new patch version with RC-0 from latest stable
+                      MAJOR=$(echo "$LATEST_STABLE" | cut -d. -f1 | cut -dv -f2)
+                      MINOR=$(echo "$LATEST_STABLE" | cut -d. -f2)
+                      PATCH=$(echo "$LATEST_STABLE" | cut -d. -f3)
+                      NEXT_PATCH=$((PATCH + 1))
+                      tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
+                    else
+                      # Non-patch: Increment latest RC tag by 1
+                      if [[ -z "$LATEST_RC" ]]; then
+                        echo "Error: No RC tags found for adhoc release"
+                        exit 1
+                      fi
+                      RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
+                      RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
+                      NEXT_RC_NUM=$((RC_NUM + 1))
+                      tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
                     fi
-                    RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
-                    RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
-                    NEXT_RC_NUM=$((RC_NUM + 1))
-                    tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
                   else
                     # Stable: Create stable release from latest RC
                     if [[ -z "$LATEST_RC" ]]; then
