@@ -15,13 +15,14 @@ on:
                     - minor
                     - patch
             trigger_source:
-                description: 'Trigger automatically or adhoc'
+                description: 'Adhoc, cutoff or stable release'
                 required: false
                 default: 'cutoff'
                 type: choice
                 options:
                     - adhoc
                     - cutoff
+                    - stable
     workflow_call:  # ✅ Add this line to allow reuse from other workflows
         inputs:
             release_type:
@@ -34,66 +35,83 @@ on:
               default: 'cutoff'
 
 jobs:
-    generate-release:
+# Right now this generate-release job only bump minor and create new RC-0
+
+# If we want to make adhoc release then the workflow_dispatch can suggest:
+# RC: If RC then will bump rc number instead (to cater for adhoc RC)
+# Minor: If Minor then will bump minor number and reset rc number to 0
+
+# Cutoff: Create new minor version with RC-0 tag for cutoff builds
+# Ad-hoc: Increment latest RC tag by 1 for ad-hoc builds
+# Stable: Create stable release tag based on latest RC tag for internal documentation, Create PR to bump app version
+
+#Workflow: Cutoff > Ad-hoc > Stable
+#Example: If cutoff is 1.2.0-RC-0, then ad-hoc will be 1.2.0-RC-1, and stable will be 1.2.0
+
+#Workflow (require hotfix): Ad-hoc (patch) > Ad-hoc (patch) > Stable
+#Example: If stable is 1.2.0 then adhoc will be 1.2.1-rc-1 then stable will be 1.2.1
+
+    generate-release-tag:
         runs-on: ubuntu-latest
+        outputs:
+            tag_name: ${{ steps.release-tag.outputs.tag_name }}
         permissions:
             contents: write
         steps:
             - name: Checkout repository
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-            - name: Generate release tag
+            - name: Check if release tag should be created
               id: tag
               run: |
-                  # Fetch all tags from remote
-                  git fetch --tags
+                  LATEST_STABLE=$(echo "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+                  LATEST_RC=$(echo "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc-[0-9]+$' | sort -V | tail -n 1)
 
-                  # Get the latest version tag from git (format v*.*.*)
-                  LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
-                  echo "LATEST_TAG=$LATEST_TAG"
-
-                  # If no tags exist yet, start with v1.0.0
-                  if [ -z "$LATEST_TAG" ]; then
-                    TAG_NAME="v1.0.0"
-                  else
-                    # Extract version numbers (remove 'v' prefix)
-                    MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | sed 's/v//')
-                    MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-                    PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-
-                    # Increment version based on release type
-                    case "${{ inputs.release_type }}" in
-                      "major")
-                        NEW_MAJOR=$((MAJOR + 1))
-                        NEW_MINOR=0
-                        NEW_PATCH=0
-                        ;;
-                      "minor")
-                        NEW_MAJOR=$MAJOR
-                        NEW_MINOR=$((MINOR + 1))
-                        NEW_PATCH=0
-                        ;;
-                      "patch")
-                        NEW_MAJOR=$MAJOR
-                        NEW_MINOR=$MINOR
-                        NEW_PATCH=$((PATCH + 1))
-                        ;;
-                    esac
+                  if [[ "${{ inputs.trigger_source }}" == "cutoff" ]]; then
+                    # Cutoff: Create new version with RC-0 based on release_type
+                    MAJOR=$(echo "$LATEST_STABLE" | cut -d. -f1 | cut -dv -f2)
+                    MINOR=$(echo "$LATEST_STABLE" | cut -d. -f2)
+                    PATCH=$(echo "$LATEST_STABLE" | cut -d. -f3)
                     
-                    # Create new tag
-                    TAG_NAME="v${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+                    if [[ "${{ inputs.release_type }}" == "major" ]]; then
+                      NEXT_MAJOR=$((MAJOR + 1))
+                      tag_name="v${NEXT_MAJOR}.0.0-rc-0"
+                    elif [[ "${{ inputs.release_type }}" == "minor" ]]; then
+                      NEXT_MINOR=$((MINOR + 1))
+                      tag_name="v${MAJOR}.${NEXT_MINOR}.0-rc-0"
+                    else  # patch
+                      NEXT_PATCH=$((PATCH + 1))
+                      tag_name="v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc-0"
+                    fi
+                  elif [[ "${{ inputs.trigger_source }}" == "adhoc" ]]; then
+                    # Ad-hoc: Increment latest RC tag by 1
+                    RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
+                    RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
+                    NEXT_RC_NUM=$((RC_NUM + 1))
+                    tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
+                  else
+                    # Stable: Create stable release from latest RC
+                    tag_name=$(echo "$LATEST_RC" | cut -d'-' -f1)
                   fi
 
-                  # Set output variable for use in later steps
-                  echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-                  # Log the tag being created
-                  echo "Creating tag: ${TAG_NAME}"
+                  echo "Latest stable: $LATEST_STABLE"
+                  echo "Latest RC:     $LATEST_RC"
+                  echo "Next version:  $tag_name"
 
+                  # Export for GitHub Actions
+                  echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
+
+    generate-gh-release:
+        needs: generate-release-tag
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
               with:
-                  tag_name: ${{ steps.tag.outputs.tag_name }}
-                  name: '${{ steps.tag.outputs.tag_name }}'
+                  tag_name: ${{ needs.generate-release-tag.outputs.tag_name }}
+                  name: '${{ needs.generate-release-tag.outputs.tag_name }}'
                   body: |
                       ${{ inputs.trigger_source == 'cutoff' && 'Automated cutoff build' || 'Ad-hoc release build' }}
                       Build profile: Production
@@ -102,14 +120,14 @@ jobs:
                       Triggered by: ${{ github.actor }}
                       Trigger source: ${{ inputs.trigger_source }}
                   generate_release_notes: true
-                  prerelease: true
+                  prerelease: ${{ inputs.trigger_source != 'stable' }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Echo Success Message
               if: success()
               run: |
-                echo "✅ ${{ github.workflow }} - ${{ inputs.trigger_source == 'cutoff' && 'Cutoff' || 'Ad-hoc' }} release ${{ steps.tag.outputs.tag_name }} created successfully by ${{ github.actor }}."
+                echo "✅ ${{ github.workflow }} - ${{ inputs.trigger_source == 'cutoff' && 'Cutoff' || 'Ad-hoc' }} release ${{ needs.generate-release-tag.outputs.tag_name }} created successfully by ${{ github.actor }}."
 
             - name: Echo Failure Message
               if: failure()
