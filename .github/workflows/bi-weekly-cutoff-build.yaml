@@ -11,7 +11,7 @@ jobs:
     check-cutoff:
         runs-on: ubuntu-latest
         outputs:
-          should_cutoff: ${{ steps.check.outputs.should_cutoff }}
+          should_cutoff: ${{ steps.cutoff.outputs.should_cutoff }}
         permissions:
             contents: write
         steps:
