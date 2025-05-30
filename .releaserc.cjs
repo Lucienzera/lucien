@@ -1,10 +1,11 @@
 const isStable = process.env.STABLE_RELEASE === 'true';
+console.log('STABLE_RELEASE:', process.env.STABLE_RELEASE, 'isStable:', isStable);
 
 module.exports = {
   branches: [
-    isStable 
-      ? { name: 'main' }              // stable release on main (no prerelease tag)
-      : { name: 'main', prerelease: 'rc' }  // prerelease with 'rc' tag on main
+    isStable
+      ? { name: 'main' }
+      : { name: 'main', prerelease: 'rc' }
   ],
   plugins: [
     ['@semantic-release/commit-analyzer', {

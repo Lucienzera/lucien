@@ -15,19 +15,7 @@ permissions:
 
 jobs:
   release:
-    name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write         # For creating GitHub releases
-      issues: write           # For commenting on issues
-      pull-requests: write    # For commenting on PRs
-      id-token: write         # For NPM provenance (if used)
-
-    env:
-      STABLE_RELEASE: ${{ github.event.inputs.stable || 'false' }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,5 +33,11 @@ jobs:
       - name: Audit installed packages
         run: npm audit signatures
 
+      - name: Set STABLE_RELEASE environment variable
+        run: echo "STABLE_RELEASE=${{ github.event.inputs.stable || 'false' }}" >> $GITHUB_ENV
+
       - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
