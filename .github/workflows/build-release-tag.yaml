@@ -64,8 +64,17 @@ jobs:
             - name: Check if release tag should be created
               id: tag
               run: |
+                  # Fetch all tags
+                  git fetch --tags
+                  TAGS=$(git tag)
+                  
                   LATEST_STABLE=$(echo "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
                   LATEST_RC=$(echo "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc-[0-9]+$' | sort -V | tail -n 1)
+
+                  # Fallback to v0.0.0 if no stable release exists
+                  if [[ -z "$LATEST_STABLE" ]]; then
+                    LATEST_STABLE="v0.0.0"
+                  fi
 
                   if [[ "${{ inputs.trigger_source }}" == "cutoff" ]]; then
                     # Cutoff: Create new version with RC-0 based on release_type
@@ -85,12 +94,20 @@ jobs:
                     fi
                   elif [[ "${{ inputs.trigger_source }}" == "adhoc" ]]; then
                     # Ad-hoc: Increment latest RC tag by 1
+                    if [[ -z "$LATEST_RC" ]]; then
+                      echo "Error: No RC tags found for adhoc release"
+                      exit 1
+                    fi
                     RC_BASE=$(echo "$LATEST_RC" | cut -d'-' -f1)
                     RC_NUM=$(echo "$LATEST_RC" | grep -oE 'rc-[0-9]+' | cut -d- -f2)
                     NEXT_RC_NUM=$((RC_NUM + 1))
                     tag_name="${RC_BASE}-rc-${NEXT_RC_NUM}"
                   else
                     # Stable: Create stable release from latest RC
+                    if [[ -z "$LATEST_RC" ]]; then
+                      echo "Error: No RC tags found for stable release"
+                      exit 1
+                    fi
                     tag_name=$(echo "$LATEST_RC" | cut -d'-' -f1)
                   fi
 
