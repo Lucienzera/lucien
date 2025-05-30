@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-    build-if-cutoff:
+    check-cutoff:
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -23,6 +23,7 @@ jobs:
           needs: check-cutoff
           if: needs.check-cutoff.outputs.should_cutoff == 'true'
           uses: ./.github/workflows/build-release-tag.yaml
+
 
     send-notifications:
         needs: [check-cutoff, create-release]
