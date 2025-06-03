@@ -8,7 +8,7 @@ const branchConfig = isStable
 console.log('branchConfig:', branchConfig);
 
 module.exports = {
-  branches: [{ name: 'main', prerelease: 'rc' }],
+  branches: ['main'],
   plugins: [
     ['@semantic-release/commit-analyzer', {
       preset: 'conventionalcommits',
