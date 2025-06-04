@@ -9,8 +9,8 @@ console.log('branchConfig:', branchConfig);
 
 module.exports = {
   branches: [
-    { name: 'main', prerelease: 'rc' },
-    "main"
+    'main',
+    { name: 'release-rc', prerelease: 'rc' },
   ],
   plugins: [
     ['@semantic-release/commit-analyzer', {
