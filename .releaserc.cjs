@@ -27,5 +27,8 @@ module.exports = {
         { type: 'build', release: false }
       ]
     }],
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/npm",
+    "@semantic-release/git",
   ]
 };
