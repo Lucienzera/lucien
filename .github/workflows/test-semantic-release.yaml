@@ -10,6 +10,9 @@ on:
         required: false
         default: 'false'  # default to RC if not specified
 
+permissions:
+  contents: write  # For checkout
+
 jobs:
   release:
     runs-on: ubuntu-latest
