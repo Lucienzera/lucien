@@ -9,12 +9,7 @@ console.log('branchConfig:', branchConfig);
 
 module.exports = {
   branches: [
-<<<<<<< Updated upstream
-    { name: 'main', prerelease: 'rc' },
-    "main"
-=======
-    { name: 'main', prerelease: true},
->>>>>>> Stashed changes
+    { name: 'main', prerelease: true}
   ],
   plugins: [
     ['@semantic-release/commit-analyzer', {
