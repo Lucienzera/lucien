@@ -41,8 +41,63 @@ jobs:
       - name: Set STABLE_RELEASE environment variable
         run: echo "STABLE_RELEASE=${{ github.event.inputs.stable || 'false' }}" >> $GITHUB_ENV
 
-      - name: Release
+      - name: Generate RC release tag
+        id: tag
+        run: |
+            # Fetch all tags from remote
+            git fetch --tags
+
+            # Get the latest version tag from git (format v*.*.*)
+            LATEST_TAG=$(git tag -l "v*" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+            echo "LATEST_TAG=$LATEST_TAG"
+
+            # If no tags exist yet, start with v1.0.0
+            if [ -z "$LATEST_TAG" ]; then
+              TAG_NAME="v1.0.0"
+            else
+              # Extract major version number (remove 'v' prefix)
+              MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | sed 's/v//')
+
+              # Extract minor version number
+              MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+
+              # Increment minor version for this cutoff release
+              NEW_MINOR=$((MINOR + 1))
+              
+              # Create new tag with incremented minor version, reset patch version and rc version to 0
+              TAG_NAME="v${MAJOR}.${NEW_MINOR}.0-rc-0"
+            fi
+
+            # Set output variable for use in later steps
+            echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+            # Log the tag being created
+            echo "Creating RC tag: ${TAG_NAME}"
+
+      - name: Create release notes
+        run: |
+          LATEST_STABLE_TAG=$(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          LATEST_RC_TAG=${{ steps.tag.outputs.tag_name }}
+          echo "New RC tag: $RC_TAG"
+
+          npx conventional-changelog -p conventionalcommits --from $LATEST_STABLE_TAG --to $LATEST_RC_TAG > release-notes.md
+    
+      # - name: Release
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #   run: npx semantic-release
+
+      - name: Create GitHub RC Pre-Release
+        if: steps.cutoff.outputs.should_cutoff == 'true'
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+            tag_name: ${{ steps.tag.outputs.tag_name }}
+            name: '${{ steps.tag.outputs.tag_name }}'
+            body: |
+                Automated cutoff build
+                Build profile: Production
+                GitHub Actions workflow: ${{ github.workflow }}
+            body_path: release-notes.md
+            prerelease: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
