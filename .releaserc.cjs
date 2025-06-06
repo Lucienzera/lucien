@@ -20,7 +20,7 @@ module.exports = {
         { type: 'fix', release: 'patch' },
         { type: 'perf', release: 'patch' },
         { type: 'refactor', release: 'patch' },
-        { breaking: true, release: 'minor' },
+        { breaking: true, release: 'major' },
         { type: 'docs', release: false },
         { type: 'test', release: false },
         { type: 'ci', release: false },
