@@ -9,6 +9,7 @@ console.log('branchConfig:', branchConfig);
 
 module.exports = {
   branches: [
+    "main"
     { name: 'main', prerelease: true}
   ],
   plugins: [
