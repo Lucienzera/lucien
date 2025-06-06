@@ -84,11 +84,11 @@ jobs:
       #     npx conventional-changelog -p conventionalcommits --from $LATEST_TAG --to $LATEST_RC_TAG | sed "s/0.0.0/${LATEST_RC_TAG}/g" > release-notes.md
 
     
-      # - name: Release
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #   run: npx semantic-release
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
 
       # - name: Create GitHub RC Pre-Release
       #   uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
