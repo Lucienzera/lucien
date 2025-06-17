@@ -1,0 +1,50 @@
+# This workflow allows for ad-hoc creation of release tags without date checking requirements.
+# It can be triggered manually via GitHub Actions UI or API.
+name: Test workflow for webhook
+
+on:
+    workflow_dispatch:
+        inputs:
+            trigger_source:
+                description: 'Release trigger source'
+                required: false
+                default: 'cutoff'
+                type: choice
+                options:
+                    - cutoff
+                    - adhoc
+                    - stable
+                    - hotfix
+    workflow_call:
+        inputs:
+            trigger_source:
+              required: false
+              type: string
+              default: 'cutoff'
+
+jobs:
+# Cutoff: Bump minor version and create -rc-0
+# Adhoc: Use latest rc version and bump rc + 1
+# Stable: Use latest version and remove -rc-X and create prerelease: false
+# Hotfix: Use latest version, bump patch version and create -rc-0
+
+#Workflow: Cutoff > Adhoc > Stable
+#Example: If cutoff is 1.2.0-rc-0, then adhoc will be 1.2.0-rc-1, and stable will be 1.2.0
+
+#Workflow (hotfix): Hotfix > Adhoc > Stable
+#Example: If stable is 1.2.0 then hotfix will be 1.2.1-rc-0, adhoc will be 1.2.1-rc-1, then stable will be 1.2.1
+
+    webhook-test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+            - name: Send Teams Webhook Message on Failure
+              uses: neonidian/teams-notify-build-status@8b63dece1c06c3a43ca66e31d9255353b876f16d # v4.1.0
+              with:
+                  webhookUrl: https://ytldigital.webhook.office.com/webhookb2/b5a398fb-810a-4a37-a3ff-1a6b453ffba5@6341e767-9cc7-461f-951e-767bbe3ed5d3/IncomingWebhook/401465db2a4843a4a3e1bfbeb2b34a00/52f2cdc6-bd2e-40e7-8f9d-185bfad992dc/V2xs_2H-x8FIaBI_UpGp_Nq26XNtylrpxFTrm8MvFTfFU1
+                  title: ${{ github.workflow }} success
+                  titleBackgroundColor: 'success'
+                  message: '${{ github.workflow }} Success'
+
