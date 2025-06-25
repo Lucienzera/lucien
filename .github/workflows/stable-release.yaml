@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    create-stable-release:
+    create-stable-tag:
         runs-on: ubuntu-latest
         environment: production # Environment protection rules will require approval before this job runs
         permissions:
@@ -57,10 +57,6 @@ jobs:
                       exit 1
                   fi
 
-                  # Configure git user
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
                   # Create and push the stable tag
                   git tag -a "$STABLE_TAG" -m "Stable release $STABLE_TAG (from $RC_TAG)"
                   git push origin "$STABLE_TAG"
@@ -69,7 +65,7 @@ jobs:
                   echo "stable_tag=$STABLE_TAG" >> $GITHUB_OUTPUT
 
     create-github-release:
-        needs: create-stable-release
+        needs: create-stable-tag
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -85,14 +81,8 @@ jobs:
                       **Release Details:**
                       - Released by: @${{ github.actor }}
                       - Workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-                      - Build: #${{ github.run_number }}
                   generate_release_notes: true
                   draft: false
                   prerelease: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-            - name: Notify completion
-              run: |
-                  echo "🎉 Successfully created stable release: ${{ needs.create-stable-release.outputs.stable_tag }}"
-                  echo "📦 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-stable-release.outputs.stable_tag }}"
