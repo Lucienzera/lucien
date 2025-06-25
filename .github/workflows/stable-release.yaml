@@ -17,6 +17,9 @@ jobs:
 
             - name: Create stable release from latest RC
               run: |
+                  # Step 1: Fetch all tags from remote
+                  git fetch --tags
+
                   # Find latest RC tag
                   RC_TAG=$(git tag -l "v*-rc.*" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -V | tail -n 1)
 
@@ -25,7 +28,11 @@ jobs:
                       exit 1
                   fi
 
-                  # Create stable tag (remove -rc.* suffix)
+                  # Step 2: Checkout the RC tag
+                  git checkout "$RC_TAG"
+                  echo "✅ Checked out RC tag: $RC_TAG"
+
+                  # Step 3: Create stable tag (remove -rc.* suffix)
                   STABLE_TAG=$(echo $RC_TAG | sed 's/-rc\.[0-9]*$//')
 
                   echo "Creating stable release: $STABLE_TAG from $RC_TAG"
@@ -40,8 +47,10 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-                  # Create and push the stable tag
+                  # Create the stable tag
                   git tag -a "$STABLE_TAG" -m "Stable release $STABLE_TAG (from $RC_TAG)"
+
+                  # Step 4: Push the stable tag to origin
                   git push origin "$STABLE_TAG"
 
                   echo "stable_tag=$STABLE_TAG" >> $GITHUB_ENV
