@@ -78,14 +78,17 @@ jobs:
               uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
               with:
                   tag_name: ${{ needs.create-stable-release.outputs.stable_tag }}
-                  name: '🚀 Release ${{ needs.create-stable-release.outputs.stable_tag }}'
+                  name: '${{ needs.create-stable-release.outputs.stable_tag }}'
                   body: |
                       Stable release based on RC tag: ${{ needs.create-stable-release.outputs.rc_tag }}
 
-                      Released by: @${{ github.actor }}
+                      **Release Details:**
+                      - Released by: @${{ github.actor }}
+                      - Workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                      - Build: #${{ github.run_number }}
                   generate_release_notes: true
                   draft: false
-                  prerelease: true
+                  prerelease: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
