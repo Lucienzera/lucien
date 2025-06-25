@@ -2,63 +2,41 @@ name: Stable Release
 
 on:
     workflow_dispatch:
-        inputs: {}
 
 jobs:
-    create-stable-tag:
+    stable-release:
         runs-on: ubuntu-latest
-        environment: production # Environment protection rules will require approval before this job runs
+        environment: production
         permissions:
             contents: write
-            pull-requests: read
-        outputs:
-            stable_tag: ${{ steps.create_tag.outputs.stable_tag }}
-            rc_tag: ${{ steps.find_rc.outputs.rc_tag }}
         steps:
             - name: Checkout repository
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
-                  fetch-depth: 0 # Fetch full history to access all tags
+                  fetch-depth: 0
 
-            - name: Find latest RC tag
-              id: find_rc
+            - name: Create stable release from latest RC
               run: |
-                  # Fetch all tags from remote
-                  git fetch --tags
+                  # Find latest RC tag
+                  RC_TAG=$(git tag -l "v*-rc.*" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -V | tail -n 1)
 
-                  # Find the latest RC tag (format: v*.*..*-rc.*)
-                  LATEST_RC_TAG=$(git tag -l "v*-rc.*" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -V | tail -n 1)
-
-                  if [ -z "$LATEST_RC_TAG" ]; then
+                  if [ -z "$RC_TAG" ]; then
                       echo "❌ No RC tags found. Please create an RC release first."
                       exit 1
                   fi
 
-                  echo "Latest RC tag found: $LATEST_RC_TAG"
-                  echo "rc_tag=$LATEST_RC_TAG" >> $GITHUB_OUTPUT
-
-            - name: Checkout latest RC tag
-              run: |
-                  git checkout ${{ steps.find_rc.outputs.rc_tag }}
-                  echo "✅ Checked out RC tag: ${{ steps.find_rc.outputs.rc_tag }}"
-
-            - name: Create stable tag
-              id: create_tag
-              run: |
-                  RC_TAG="${{ steps.find_rc.outputs.rc_tag }}"
-
-                  # Remove the -rc.* suffix to create stable tag (e.g., v1.2.0-rc.1 -> v1.2.0)
+                  # Create stable tag (remove -rc.* suffix)
                   STABLE_TAG=$(echo $RC_TAG | sed 's/-rc\.[0-9]*$//')
 
-                  echo "Creating stable tag: $STABLE_TAG"
+                  echo "Creating stable release: $STABLE_TAG from $RC_TAG"
 
                   # Check if stable tag already exists
                   if git tag -l | grep -q "^${STABLE_TAG}$"; then
-                      echo "❌ Stable tag $STABLE_TAG already exists. Cannot create duplicate stable release."
+                      echo "❌ Stable tag $STABLE_TAG already exists."
                       exit 1
                   fi
 
-                  # Configure git user as recommended in https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
+                  # Configure git user
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -66,26 +44,19 @@ jobs:
                   git tag -a "$STABLE_TAG" -m "Stable release $STABLE_TAG (from $RC_TAG)"
                   git push origin "$STABLE_TAG"
 
-                  echo "✅ Created and pushed stable tag: $STABLE_TAG"
-                  echo "stable_tag=$STABLE_TAG" >> $GITHUB_OUTPUT
+                  echo "stable_tag=$STABLE_TAG" >> $GITHUB_ENV
+                  echo "rc_tag=$RC_TAG" >> $GITHUB_ENV
 
-    create-github-release:
-        needs: create-stable-tag
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
               with:
-                  tag_name: ${{ needs.create-stable-release.outputs.stable_tag }}
-                  name: '${{ needs.create-stable-release.outputs.stable_tag }}'
+                  tag_name: ${{ env.stable_tag }}
+                  name: ${{ env.stable_tag }}
                   body: |
-                      Stable release based on RC tag: ${{ needs.create-stable-release.outputs.rc_tag }}
+                      Stable release from RC: ${{ env.rc_tag }}
 
-                      **Release Details:**
-                      - Released by: @${{ github.actor }}
-                      - Workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                      Released by: @${{ github.actor }}
+                      Workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
                   generate_release_notes: true
                   draft: false
                   prerelease: false
