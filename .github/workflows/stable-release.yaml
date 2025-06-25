@@ -2,6 +2,7 @@ name: Stable Release
 
 on:
     workflow_dispatch:
+        inputs: {}
 
 jobs:
     create-stable-tag:
@@ -56,6 +57,10 @@ jobs:
                       echo "❌ Stable tag $STABLE_TAG already exists. Cannot create duplicate stable release."
                       exit 1
                   fi
+
+                  # Configure git user as recommended in https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
                   # Create and push the stable tag
                   git tag -a "$STABLE_TAG" -m "Stable release $STABLE_TAG (from $RC_TAG)"
