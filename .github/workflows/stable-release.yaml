@@ -94,7 +94,7 @@ jobs:
                   title: 'chore(build): pltfe bump BUILD_VERSION to ${{ env.stable_tag }}'
                   body: |
                       This PR automatically bumps the BUILD_VERSION in expoPrebuild.ts to ${{ env.stable_tag }} after a stable release.
-                  branch: bump/build-version
+                  branch: task/pltfe-bump-build-version-${{ env.stable_tag }}
                   base: ${{ github.ref_name }}
                   add-paths: |
                       .expo-prebuild/expoPrebuild.ts
