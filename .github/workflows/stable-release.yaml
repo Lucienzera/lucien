@@ -88,14 +88,15 @@ jobs:
                   rm "$FILE.bak"
 
             - name: Create PR for bumped BUILD_VERSION in expoPrebuild.ts
-              uses: peter-evans/create-pull-request@v7.0.8
+              uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7
               with:
                   commit-message: 'chore(build): pltfe bump BUILD_VERSION to ${{ env.stable_tag }}'
                   title: 'chore(build): pltfe bump BUILD_VERSION to ${{ env.stable_tag }}'
                   body: |
                       This PR automatically bumps the BUILD_VERSION in expoPrebuild.ts to ${{ env.stable_tag }} after a stable release.
                   branch: task/pltfe-bump-build-version-${{ env.stable_tag }}
-                  base: ${{ github.ref_name }}
+                  labels: |
+                      automated pr
                   add-paths: |
                       .expo-prebuild/expoPrebuild.ts
               env:
