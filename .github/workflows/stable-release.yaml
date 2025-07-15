@@ -105,6 +105,7 @@ jobs:
                   body: |
                       This PR automatically bumps the BUILD_VERSION in expoPrebuild.ts to ${{ env.next_version }} (next minor version) after stable release ${{ env.stable_tag }}.
                   branch: task/pltfe-bump-build-version-${{ env.next_version }}
+                  base: ${{ github.ref_name }}
                   labels: |
                       automated pr
                   add-paths: |
